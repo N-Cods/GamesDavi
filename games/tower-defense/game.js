@@ -390,12 +390,15 @@ class Tower {
                 break;
 
             case 'aa':
-                // Missiles
+                // Missiles (Pointing Right)
                 ctx.fillStyle = '#ef4444'; // Red-500
-                ctx.fillRect(-6, -10, 4, 12);
-                ctx.fillRect(2, -10, 4, 12);
+                // Top Missile
+                ctx.fillRect(-2, -6, 12, 4);
+                // Bottom Missile
+                ctx.fillRect(-2, 2, 12, 4);
+                // Base
                 ctx.fillStyle = '#64748b';
-                ctx.beginPath(); ctx.arc(0, 6, 8, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(-4, 0, 8, 0, Math.PI * 2); ctx.fill();
                 break;
 
             case 'mine':
