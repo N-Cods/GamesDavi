@@ -75,25 +75,47 @@
 
 
         <!-- Menu Upgrade -->
-        <div id="upgrade_menu" class="hidden modal w-36 flex flex-col gap-2">
-            <div class="flex justify-between border-b border-slate-600 pb-1">
-                <span id="upg_title" class="text-[10px] font-bold text-white uppercase truncate">Tower</span>
-                <button onclick="close_menu()" class="text-slate-400 text-xs hover:text-white px-1">✕</button>
+        <!-- Menu Upgrade Centered -->
+        <div id="upgrade_menu"
+            class="hidden fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-64 bg-slate-900 border-2 border-slate-600 rounded-xl shadow-2xl p-4 flex flex-col gap-3">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                <span id="upg_title" class="text-sm font-black text-white uppercase tracking-wider">TOWER</span>
+                <button onclick="close_menu()" class="text-slate-400 hover:text-white px-2 font-bold">✕</button>
             </div>
-            <div class="text-[9px] text-slate-300 flex justify-between px-1">
-                <span>Dmg: <span id="stat_dmg" class="text-white"></span></span>
-                <span>Rng: <span id="stat_rng" class="text-white"></span></span>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-2 gap-2 text-[10px] text-slate-300">
+                <div class="bg-slate-800 p-2 rounded">
+                    <p class="text-slate-500 uppercase font-bold mb-1">Dano</p>
+                    <div class="flex items-center gap-1">
+                        <span id="stat_dmg" class="text-white font-mono text-base">100</span>
+                        <span class="text-slate-600">➜</span>
+                        <span id="stat_dmg_next" class="text-green-400 font-mono text-base font-bold">150</span>
+                    </div>
+                </div>
+                <div class="bg-slate-800 p-2 rounded">
+                    <p class="text-slate-500 uppercase font-bold mb-1">Alcance</p>
+                    <div class="flex items-center gap-1">
+                        <span id="stat_rng" class="text-white font-mono text-base">2.5</span>
+                        <span class="text-slate-600">➜</span>
+                        <span id="stat_rng_next" class="text-green-400 font-mono text-base font-bold">3.0</span>
+                    </div>
+                </div>
             </div>
-            <button id="btn_upgrade"
-                class="bg-green-600 hover:bg-green-500 text-white py-2 rounded text-[9px] font-bold flex justify-between px-2 transition">
-                <span>UPGRADE</span>
-                <span>$<span id="val_upg"></span></span>
-            </button>
-            <button id="btn_sell"
-                class="bg-red-900/80 hover:bg-red-700 text-white py-1 rounded text-[9px] font-bold flex justify-between px-2 transition">
-                <span>VENDER</span>
-                <span>+$<span id="val_sell"></span></span>
-            </button>
+
+            <!-- Action Buttons -->
+            <div class="grid grid-cols-2 gap-3 mt-2">
+                <button id="btn_upgrade"
+                    class="bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold flex flex-col items-center justify-center transition border-b-4 border-green-800 active:border-b-0 active:translate-y-1">
+                    <span class="text-xs">UPGRADE</span>
+                    <span class="text-[10px] text-green-200">$<span id="val_upg"></span></span>
+                </button>
+                <button id="btn_sell"
+                    class="bg-red-900/80 hover:bg-red-700 text-white py-3 rounded-lg font-bold flex flex-col items-center justify-center transition border-b-4 border-red-950 active:border-b-0 active:translate-y-1">
+                    <span class="text-xs">VENDER</span>
+                    <span class="text-[10px] text-red-200">+$<span id="val_sell"></span></span>
+                </button>
+            </div>
         </div>
 
         <!-- Tela Game Over -->
