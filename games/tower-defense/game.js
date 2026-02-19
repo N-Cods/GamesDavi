@@ -1453,42 +1453,142 @@ window.show_dice_roll = function (tower) {
     }, 2000);
 }
 
+// --- LONG PRESS DETAIL LOGIC ---
+
+function setup_long_press() {
+    const btns = document.querySelectorAll('.tower_btn');
+    btns.forEach(btn => {
+        // Extract type from onclick="select_tower('xyz')"
+        const onClickStr = btn.getAttribute('onclick');
+        if (!onClickStr) return;
+
+        let type = onClickStr.match(/'([^']+)'/)[1];
+        if (!type) return;
+
+        // Remove inline onclick to handle it manually
+        btn.removeAttribute('onclick');
+
+        let pressTimer;
+        let isLongPress = false;
+
+        const start = (e) => {
+            isLongPress = false;
+            pressTimer = setTimeout(() => {
+                isLongPress = true;
+                show_tower_detail(type);
+                if (navigator.vibrate) navigator.vibrate(50);
+            }, 500); // 500ms Long Press
+        };
+
+        const cancel = () => {
+            clearTimeout(pressTimer);
+        };
+
+        // Handle Click (Selection)
+        btn.onclick = (e) => {
+            if (isLongPress) {
+                // Handled by timer, do nothing
+                isLongPress = false;
+                return;
+            }
+            select_tower(type);
+        };
+
+        // Touch/Mouse Events
+        btn.addEventListener('mousedown', start);
+        btn.addEventListener('touchstart', start, { passive: true });
+
+        btn.addEventListener('mouseup', cancel);
+        btn.addEventListener('mouseleave', cancel);
+        btn.addEventListener('touchend', cancel);
+        btn.addEventListener('touchcancel', cancel);
+    });
+}
+
+function show_tower_detail(type) {
+    const modal = document.getElementById('tower_detail_modal');
+    const t = TOWERS[type];
+    if (!t) return;
+
+    // Populate
+    document.getElementById('detail_img').src = t.img;
+    document.getElementById('detail_name').innerText = t.name;
+    document.getElementById('detail_type').innerText = t.type.toUpperCase();
+    document.getElementById('detail_desc').textContent = t.desc; // Use textContent for safety
+
+    document.getElementById('detail_cost').innerText = '$' + t.cost;
+    document.getElementById('detail_dmg').innerText = (t.dmg > 1000 ? (t.dmg / 1000).toFixed(1) + 'k' : t.dmg);
+    document.getElementById('detail_rng').innerText = (t.rng || '-');
+    document.getElementById('detail_rate').innerText = (t.rate || '-');
+
+    modal.classList.remove('hidden');
+}
+
+window.close_tower_detail = function () {
+    document.getElementById('tower_detail_modal').classList.add('hidden');
+}
+
 function init() {
     state.money = 600; // Starting money
     state.lives = 20;
     state.wave = 1;
     state.active = false;
     state.game_over = false;
-    state.spawning = false;
-    state.speed = 1;
+    state.auto_wave = false;
     state.grid = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
     state.towers = [];
     state.enemies = [];
     state.projectiles = [];
     state.particles = [];
-    state.balls = [];
 
-    // INHERITANCE LOGIC (Using Modal)
-    const inheritance = parseFloat(localStorage.getItem('td_inheritance'));
-    if (inheritance && inheritance > 0) {
-        const bonus = Math.floor(inheritance);
-        state.money += bonus;
-
-        // Show Inheritance Modal
-        const modal = document.getElementById('modal_inheritance');
-        document.getElementById('inheritance_val').innerText = `+$${bonus}`;
-        modal.classList.remove('hidden');
-
-        localStorage.removeItem('td_inheritance');
-    }
-
-    state.auto_wave = document.getElementById('auto_wave').checked;
-    update_speed_btn();
-
-    resize();
+    // Initial Path
     recalc_path();
-    update_ui();
+
+    // UI Updates
     document.getElementById('game_over').classList.add('hidden');
+
+    // Start loop
+    game_loop();
+    update_ui();
+
+    // Setup Long Press Details
+    if (window.setup_long_press) setup_long_press();
+}
+
+// SETUP LONG PRESS
+setup_long_press();
+}
+state.game_over = false;
+state.spawning = false;
+state.speed = 1;
+state.grid = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+state.towers = [];
+state.enemies = [];
+state.projectiles = [];
+state.particles = [];
+state.balls = [];
+
+// INHERITANCE LOGIC (Using Modal)
+const inheritance = parseFloat(localStorage.getItem('td_inheritance'));
+if (inheritance && inheritance > 0) {
+    const bonus = Math.floor(inheritance);
+    state.money += bonus;
+
+    // Show Inheritance Modal
+    const modal = document.getElementById('modal_inheritance');
+    document.getElementById('inheritance_val').innerText = `+$${bonus}`;
+    modal.classList.remove('hidden');
+
+    localStorage.removeItem('td_inheritance');
+}
+
+state.auto_wave = document.getElementById('auto_wave').checked;
+update_speed_btn();
+
+resize();
+recalc_path();
+update_ui();
+document.getElementById('game_over').classList.add('hidden');
 }
 
 // --- GAME OVER LOGIC ---
@@ -1539,76 +1639,79 @@ window.toggle_pause = function () { state.paused = !state.paused; }
 
 init();
 game_loop();
-// --- TOWER DICTIONARY ---
-window.toggle_dictionary = function () {
-    const el = document.getElementById('tower_dictionary');
-    const is_hidden = el.classList.contains('hidden');
+// --- LONG PRESS DETAIL LOGIC ---
 
-    if (is_hidden) {
-        // Open
-        el.classList.remove('hidden');
-        state.paused = true;
-        render_dict_list();
-    } else {
-        // Close
-        el.classList.add('hidden');
-        state.paused = false;
-    }
-}
+window.setup_long_press = function () {
+    const btns = document.querySelectorAll('.tower_btn');
+    btns.forEach(btn => {
+        const onClickStr = btn.getAttribute('onclick');
+        let type = btn.dataset.type;
 
-function render_dict_list() {
-    const list = document.getElementById('dict_list');
-    list.innerHTML = '';
+        if (!type && onClickStr) {
+            const match = onClickStr.match(/'([^']+)'/);
+            if (match) type = match[1];
+        }
+        if (!type) return;
 
-    Object.keys(TOWERS).forEach(key => {
-        const t = TOWERS[key];
-        const btn = document.createElement('button');
-        btn.className = "aspect-square bg-slate-800 border border-slate-600 rounded hover:bg-slate-700 hover:border-indigo-500 transition flex items-center justify-center p-1 group";
-        btn.onclick = () => show_dict_details(key);
+        btn.dataset.type = type;
+        btn.removeAttribute('onclick');
 
-        const img = document.createElement('img');
-        img.src = t.img;
-        img.className = "w-full h-full object-contain opacity-70 group-hover:opacity-100 transition";
+        // Clone to clear old events
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
 
-        btn.appendChild(img);
-        list.appendChild(btn);
+        let pressTimer;
+        let isLongPress = false;
+
+        const start = (e) => {
+            if (e.type === 'mousedown' && e.button !== 0) return;
+            isLongPress = false;
+            pressTimer = setTimeout(() => {
+                isLongPress = true;
+                show_tower_detail(type);
+                if (navigator.vibrate) navigator.vibrate(50);
+            }, 500);
+        };
+
+        const cancel = () => { clearTimeout(pressTimer); };
+
+        newBtn.addEventListener('mousedown', (e) => { start(e); newBtn.style.transform = 'scale(0.95)'; });
+        newBtn.addEventListener('touchstart', (e) => { start(e); newBtn.style.transform = 'scale(0.95)'; }, { passive: true });
+
+        newBtn.addEventListener('mouseup', () => { cancel(); newBtn.style.transform = 'scale(1)'; });
+        newBtn.addEventListener('mouseleave', () => { cancel(); newBtn.style.transform = 'scale(1)'; });
+        newBtn.addEventListener('touchend', () => { cancel(); newBtn.style.transform = 'scale(1)'; });
+
+        newBtn.onclick = (e) => {
+            if (isLongPress) {
+                e.preventDefault();
+                e.stopPropagation();
+                isLongPress = false;
+                return;
+            }
+            select_tower(type);
+        };
     });
 }
 
-function show_dict_details(key) {
-    const t = TOWERS[key];
-    const details = document.getElementById('dict_details');
+window.show_tower_detail = function (type) {
+    const modal = document.getElementById('tower_detail_modal');
+    const t = TOWERS[type];
+    if (!t) return;
 
-    details.innerHTML = `
-        <div class="relative mb-6 group">
-            <div class="absolute inset-0 bg-indigo-500 blur-2xl opacity-20 group-hover:opacity-40 transition duration-700"></div>
-            <img src="${t.img}" class="w-32 h-32 object-contain relative z-10 drop-shadow-2xl animate-bounce-slow">
-        </div>
-        
-        <h3 class="text-4xl font-black text-white uppercase mb-2 tracking-tighter">${t.name}</h3>
-        <span class="text-xs font-bold px-3 py-1 rounded bg-slate-800 text-indigo-300 border border-indigo-500/30 mb-6 uppercase tracking-[0.2em] shadow-lg">${t.type.toUpperCase()}</span>
-        
-        <div class="bg-slate-800/50 p-6 rounded-lg border border-slate-700 w-full max-w-lg mb-8 backdrop-blur-sm">
-            <p class="text-slate-200 text-lg leading-relaxed italic">"${t.desc || 'Sem descrição.'}"</p>
-        </div>
-        
-        <div class="grid grid-cols-4 gap-4 w-full max-w-2xl">
-            <div class="bg-slate-800/80 p-4 rounded-lg border border-slate-700 flex flex-col items-center hover:bg-slate-700 transition group">
-                <p class="text-[10px] text-slate-500 uppercase font-bold mb-1 group-hover:text-yellow-400 transition">Custo</p>
-                <p class="text-yellow-400 font-mono text-2xl font-bold shadow-black drop-shadow-md">$${t.cost}</p>
-            </div>
-            <div class="bg-slate-800/80 p-4 rounded-lg border border-slate-700 flex flex-col items-center hover:bg-slate-700 transition group">
-                <p class="text-[10px] text-slate-500 uppercase font-bold mb-1 group-hover:text-red-400 transition">Dano</p>
-                <p class="text-red-400 font-mono text-2xl font-bold shadow-black drop-shadow-md">${t.dmg > 0 ? (t.dmg > 1000 ? (t.dmg / 1000).toFixed(1) + 'k' : t.dmg) : '-'}</p>
-            </div>
-            <div class="bg-slate-800/80 p-4 rounded-lg border border-slate-700 flex flex-col items-center hover:bg-slate-700 transition group">
-                <p class="text-[10px] text-slate-500 uppercase font-bold mb-1 group-hover:text-blue-400 transition">Alcance</p>
-                <p class="text-blue-400 font-mono text-2xl font-bold shadow-black drop-shadow-md">${t.rng > 0 ? t.rng : '-'}</p>
-            </div>
-            <div class="bg-slate-800/80 p-4 rounded-lg border border-slate-700 flex flex-col items-center hover:bg-slate-700 transition group">
-                <p class="text-[10px] text-slate-500 uppercase font-bold mb-1 group-hover:text-green-400 transition">Taxa</p>
-                <p class="text-green-400 font-mono text-2xl font-bold shadow-black drop-shadow-md">${t.rate > 0 ? t.rate : '-'}</p>
-            </div>
-        </div>
-    `;
+    document.getElementById('detail_img').src = t.img;
+    document.getElementById('detail_name').innerText = t.name;
+    document.getElementById('detail_type').innerText = t.type.toUpperCase();
+    document.getElementById('detail_desc').textContent = t.desc;
+
+    document.getElementById('detail_cost').innerText = '$' + t.cost;
+    document.getElementById('detail_dmg').innerText = (t.dmg > 1000 ? (t.dmg / 1000).toFixed(1) + 'k' : t.dmg);
+    document.getElementById('detail_rng').innerText = (t.rng || '-');
+    document.getElementById('detail_rate').innerText = (t.rate || '-');
+
+    modal.classList.remove('hidden');
+}
+
+window.close_tower_detail = function () {
+    document.getElementById('tower_detail_modal').classList.add('hidden');
 }
