@@ -689,9 +689,14 @@ function create_explosion(gx, gy, radius_grid, color) {
 
 function get_grid_pos(e) {
     const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    return { x: Math.floor((clientX - rect.left) / TILE_SIZE), y: Math.floor((clientY - rect.top) / TILE_SIZE) };
+    return {
+        x: Math.floor((clientX - rect.left) * scaleX / TILE_SIZE),
+        y: Math.floor((clientY - rect.top) * scaleY / TILE_SIZE)
+    };
 }
 
 canvas.addEventListener('mousedown', handle_input);
@@ -708,8 +713,13 @@ function handle_input(e) {
 window.select_tower = function (type) {
     state.build_type = type;
     document.querySelectorAll('.tower_btn').forEach(b => b.classList.remove('active'));
-    const map = ['wall', 'cannon', 'mg', 'sniper', 'poison', 'aa', 'mine', 'bazooka', 'bowling', 'dice', 'heart', 'lollipop', 'pacman', 'powerup', 'promoted'];
-    document.querySelectorAll('.tower_btn')[map.indexOf(type)].classList.add('active');
+    // Fixed Map matching HTML order exactly
+    const map = ['wall', 'cannon', 'mg', 'sniper', 'poison', 'aa', 'mine', 'bazooka', 'bowling', 'dice', 'pacman', 'lollipop', 'promoted', 'powerup', 'heart'];
+    // indices: 0..14
+    const idx = map.indexOf(type);
+    if (idx >= 0 && document.querySelectorAll('.tower_btn')[idx]) {
+        document.querySelectorAll('.tower_btn')[idx].classList.add('active');
+    }
 }
 
 function build_tower(gx, gy) {
