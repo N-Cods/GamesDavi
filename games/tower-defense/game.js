@@ -1499,3 +1499,5 @@ function build_tower(gx, gy) {
         </div>
     `;
     }
+}
+}
