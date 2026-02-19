@@ -1123,11 +1123,10 @@ function update_logic() {
 
 function apply_wave_end_effects() {
     state.towers.forEach(t => {
-        // HEART: Burn Life, Double Money
+        // HEART: Regenerate Life
         if (t.type === 'heart') {
-            if (state.lives > 0) {
-                state.lives--;
-                state.money *= 2;
+            if (state.lives < 50) {
+                state.lives++;
                 create_explosion(t.gx, t.gy, 1, '#f43f5e'); // Effect
             }
         }
@@ -1492,32 +1491,34 @@ function show_dict_details(key) {
     const details = document.getElementById('dict_details');
 
     details.innerHTML = `
-        <div class="relative mb-4">
-            <div class="absolute inset-0 bg-indigo-500 blur-2xl opacity-20"></div>
-            <img src="${t.img}" class="w-24 h-24 object-contain relative z-10 drop-shadow-lg animate-bounce-slow">
+        <div class="relative mb-6 group">
+            <div class="absolute inset-0 bg-indigo-500 blur-2xl opacity-20 group-hover:opacity-40 transition duration-700"></div>
+            <img src="${t.img}" class="w-32 h-32 object-contain relative z-10 drop-shadow-2xl animate-bounce-slow">
         </div>
         
-        <h3 class="text-3xl font-black text-white uppercase mb-1">${t.name}</h3>
-        <span class="text-xs font-bold px-2 py-0.5 rounded bg-slate-700 text-indigo-300 border border-indigo-500/30 mb-4 uppercase tracking-widest">${t.type.toUpperCase()}</span>
+        <h3 class="text-4xl font-black text-white uppercase mb-2 tracking-tighter">${t.name}</h3>
+        <span class="text-xs font-bold px-3 py-1 rounded bg-slate-800 text-indigo-300 border border-indigo-500/30 mb-6 uppercase tracking-[0.2em] shadow-lg">${t.type.toUpperCase()}</span>
         
-        <p class="text-slate-300 text-sm mb-6 max-w-xs leading-relaxed">"${t.desc || 'Sem descrição.'}"</p>
+        <div class="bg-slate-800/50 p-6 rounded-lg border border-slate-700 w-full max-w-lg mb-8 backdrop-blur-sm">
+            <p class="text-slate-200 text-lg leading-relaxed italic">"${t.desc || 'Sem descrição.'}"</p>
+        </div>
         
-        <div class="grid grid-cols-2 gap-4 w-full max-w-xs">
-            <div class="bg-slate-800/50 p-2 rounded border border-slate-700">
-                <p class="text-[9px] text-slate-500 uppercase font-bold">Custo</p>
-                <p class="text-yellow-400 font-mono text-xl">$${t.cost}</p>
+        <div class="grid grid-cols-4 gap-4 w-full max-w-2xl">
+            <div class="bg-slate-800/80 p-4 rounded-lg border border-slate-700 flex flex-col items-center hover:bg-slate-700 transition group">
+                <p class="text-[10px] text-slate-500 uppercase font-bold mb-1 group-hover:text-yellow-400 transition">Custo</p>
+                <p class="text-yellow-400 font-mono text-2xl font-bold shadow-black drop-shadow-md">$${t.cost}</p>
             </div>
-            <div class="bg-slate-800/50 p-2 rounded border border-slate-700">
-                <p class="text-[9px] text-slate-500 uppercase font-bold">Dano</p>
-                <p class="text-red-400 font-mono text-xl">${t.dmg > 0 ? (t.dmg > 1000 ? (t.dmg / 1000).toFixed(1) + 'k' : t.dmg) : '-'}</p>
+            <div class="bg-slate-800/80 p-4 rounded-lg border border-slate-700 flex flex-col items-center hover:bg-slate-700 transition group">
+                <p class="text-[10px] text-slate-500 uppercase font-bold mb-1 group-hover:text-red-400 transition">Dano</p>
+                <p class="text-red-400 font-mono text-2xl font-bold shadow-black drop-shadow-md">${t.dmg > 0 ? (t.dmg > 1000 ? (t.dmg / 1000).toFixed(1) + 'k' : t.dmg) : '-'}</p>
             </div>
-            <div class="bg-slate-800/50 p-2 rounded border border-slate-700">
-                <p class="text-[9px] text-slate-500 uppercase font-bold">Alcance</p>
-                <p class="text-blue-400 font-mono text-xl">${t.rng > 0 ? t.rng : '-'}</p>
+            <div class="bg-slate-800/80 p-4 rounded-lg border border-slate-700 flex flex-col items-center hover:bg-slate-700 transition group">
+                <p class="text-[10px] text-slate-500 uppercase font-bold mb-1 group-hover:text-blue-400 transition">Alcance</p>
+                <p class="text-blue-400 font-mono text-2xl font-bold shadow-black drop-shadow-md">${t.rng > 0 ? t.rng : '-'}</p>
             </div>
-            <div class="bg-slate-800/50 p-2 rounded border border-slate-700">
-                <p class="text-[9px] text-slate-500 uppercase font-bold">Taxa</p>
-                <p class="text-green-400 font-mono text-xl">${t.rate > 0 ? t.rate : '-'}</p>
+            <div class="bg-slate-800/80 p-4 rounded-lg border border-slate-700 flex flex-col items-center hover:bg-slate-700 transition group">
+                <p class="text-[10px] text-slate-500 uppercase font-bold mb-1 group-hover:text-green-400 transition">Taxa</p>
+                <p class="text-green-400 font-mono text-2xl font-bold shadow-black drop-shadow-md">${t.rate > 0 ? t.rate : '-'}</p>
             </div>
         </div>
     `;
