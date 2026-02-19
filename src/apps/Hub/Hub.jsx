@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import {
     ShieldCheck, Calculator, Clock, Type,
-    Gamepad2, Grid3X3, Beaker, Candy, X, Grid, Castle
+    Gamepad2, Grid3X3, Beaker, Candy, X, Grid, Castle, Zap, Rocket
 } from 'lucide-react';
 
 const AppCard = ({ to, href, icon: Icon, title, desc, color }) => {
@@ -52,6 +52,8 @@ export default function Hub() {
                 <section>
                     <h2 className="text-sm font-mono uppercase tracking-widest text-slate-500 mb-6 pl-2 border-l-2 border-purple-500">Arcade Games</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <AppCard href="games/quick-game-1/index.html" icon={Zap} title="Quick Game 1" desc="Jogo Rápido 1" color="bg-amber-500" />
+                        <AppCard href="games/quick-game-2/index.html" icon={Rocket} title="Quick Game 2" desc="Jogo Rápido 2" color="bg-rose-500" />
                         <AppCard href="games/tower-defense/index.html" icon={Castle} title="Tower Defense" desc="Defenda sua base!" color="bg-orange-600" />
                         <AppCard to="/tictactoe" icon={X} title="Tic Tac Toe" desc="O clássico Jogo da Velha." color="bg-red-500" />
                         <AppCard to="/water" icon={Beaker} title="Water Sort" desc="Puzzle de organização de cores." color="bg-blue-500" />
