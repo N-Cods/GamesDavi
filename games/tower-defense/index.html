@@ -175,6 +175,59 @@
         </div>
 
 
+        <!-- TOWER DETAIL MODAL -->
+        <div id="tower_detail_modal"
+            class="hidden absolute inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center animate-fade-in">
+            <div
+                class="bg-slate-900 border-2 border-slate-700 rounded-2xl p-6 max-w-lg w-full shadow-2xl flex flex-col gap-4 relative">
+                <button onclick="close_tower_detail()"
+                    class="absolute top-4 right-4 text-slate-400 hover:text-white transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                        stroke="currentColor" class="w-8 h-8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+
+                <!-- Header -->
+                <div class="flex items-center gap-4 border-b border-slate-800 pb-4">
+                    <img id="detail_img" src="" class="w-16 h-16 object-contain">
+                    <div>
+                        <h2 id="detail_name" class="text-2xl font-black text-white uppercase tracking-wider">NAME</h2>
+                        <span id="detail_type"
+                            class="text-xs bg-indigo-900 text-indigo-300 px-2 py-1 rounded font-mono">TYPE</span>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-800 min-h-[80px]">
+                    <p id="detail_desc" class="text-slate-300 text-sm leading-relaxed">Description goes here...</p>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-4 gap-2">
+                    <div class="stat-card bg-slate-800 p-2 rounded text-center">
+                        <p class="text-[10px] text-slate-500 uppercase font-bold">Custo</p>
+                        <p id="detail_cost" class="text-yellow-400 font-mono font-bold text-lg">0</p>
+                    </div>
+                    <div class="stat-card bg-slate-800 p-2 rounded text-center">
+                        <p class="text-[10px] text-slate-500 uppercase font-bold">Dano</p>
+                        <p id="detail_dmg" class="text-white font-mono font-bold text-lg">0</p>
+                    </div>
+                    <div class="stat-card bg-slate-800 p-2 rounded text-center">
+                        <p class="text-[10px] text-slate-500 uppercase font-bold">Alcance</p>
+                        <p id="detail_rng" class="text-white font-mono font-bold text-lg">0</p>
+                    </div>
+                    <div class="stat-card bg-slate-800 p-2 rounded text-center">
+                        <p class="text-[10px] text-slate-500 uppercase font-bold">Rate</p>
+                        <p id="detail_rate" class="text-white font-mono font-bold text-lg">0</p>
+                    </div>
+                </div>
+
+                <p class="text-center text-[10px] text-slate-600 mt-2">Segure para ver detalhes • Clique para selecionar
+                </p>
+            </div>
+        </div>
+
         <!-- CANVAS GAME -->
         <canvas id="game_canvas" class="block max-w-full max-h-full mx-auto shadow-2xl"></canvas>
     </div>
