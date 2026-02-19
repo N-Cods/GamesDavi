@@ -63,7 +63,7 @@ const TOWERS = {
     heart: { name: "Coração", cost: 1500, rng: 0, dmg: 0, rate: 0, type: 'none', img: './img/weapon-heart-on-fire.svg', is_eco: true, desc: "Queima 1 vida por onda para DOBRAR o dinheiro ganho." },
     lollipop: { name: "Pirulito", cost: 400, rng: 2.5, dmg: 0, rate: 0, type: 'all', img: './img/weapon-lollipop.svg', is_aura: true, slow: 0.9, desc: "Caramelo grudento: Desacelera inimigos em 90%." },
     pacman: { name: "Pacman", cost: 300, rng: 0.5, dmg: 99999, rate: 0, type: 'ground', img: './img/weapon-pacmam.svg', is_trap: true, start_lvl: 10, desc: "Come inimigos e perde 1 nível. Some no nível 0." },
-    powerup: { name: "Powerup", cost: 1000, rng: 99, dmg: 0, rate: 0, type: 'none', img: './img/weapon-powerup.svg', is_buff: true, buff_type: 'cannon', desc: "Buff Global: Aumenta dano de TODOS os Canhões em 10% por nível." },
+    powerup: { name: "Powerup", cost: 1000, rng: 99, dmg: 0, rate: 0, type: 'none', img: './img/weapon-powerup.svg', is_buff: true, buff_type: 'cannon', upgrade_factor: 1.1, desc: "Buff Global: Aumenta dano de TODOS os Canhões em 10% por nível." },
     promoted: { name: "Promoted", cost: 600, rng: 1.5, dmg: 0, rate: 0, type: 'none', img: './img/weapon-promoted.svg', is_buff: true, buff_type: 'neighbor', desc: "Evolui a torre abaixo a cada onda. Some se acabar o dinheiro." }
 };
 
@@ -618,26 +618,25 @@ class Enemy {
                     if (d < spd) this.finish();
                     else { this.gx += (dx / d) * spd; this.gy += (dy / d) * spd; }
                 }
-                // else: Stuck? Or at end of path?
-                // Just move towards center of current tile if stuck
-
             } else {
-                // Move towards center of best neighbor
-                let tx = best.x;
-                let ty = best.y;
-                let dx = tx - this.gx, dy = ty - this.gy;
+                // Strict Grid Movement (No diagonal cutting)
+                let tx = best.x - cx;
+                let ty = best.y - cy;
 
-                // Allow diagonal movement feeling by not snapping strictly to grid logic every frame
-                // But Flow Field is grid based.
-                // Smooth movement: 
-                // Vector field would be better, but simple neighbor checking works.
-
-                let dist = Math.hypot(dx, dy);
-                if (dist < spd) {
-                    this.gx = tx; this.gy = ty; // Snap? No, just move
+                if (tx !== 0) {
+                    // Moving Horizontally
+                    this.gx += Math.sign(tx) * spd;
+                    // Snap Y to center
+                    let drift = cy - this.gy;
+                    if (Math.abs(drift) < spd) this.gy = cy;
+                    else this.gy += Math.sign(drift) * spd;
                 } else {
-                    this.gx += (dx / dist) * spd;
-                    this.gy += (dy / dist) * spd;
+                    // Moving Vertically
+                    this.gy += Math.sign(ty) * spd;
+                    // Snap X to center
+                    let drift = cx - this.gx;
+                    if (Math.abs(drift) < spd) this.gx = cx;
+                    else this.gx += Math.sign(drift) * spd;
                 }
             }
         }
@@ -921,7 +920,7 @@ window.open_menu = function (tower, e) {
 
     const btn_upgrade = document.getElementById('btn_upgrade');
 
-    if (tower.type === 'mine' || tower.type === 'bowling' || tower.type === 'powerup' || tower.type === 'promoted' || tower.type === 'heart') {
+    if (tower.type === 'mine' || tower.type === 'bowling' || tower.type === 'promoted' || tower.type === 'heart') {
         if (!data.upgrade_factor) {
             btn_upgrade.classList.add('hidden');
             document.getElementById('stat_dmg_next').innerText = '-';
