@@ -1445,18 +1445,38 @@ window.show_dice_roll = function (tower) {
                 create_explosion(tower.gx, tower.gy, 0.5, 'green');
             }
 
-            // Remove Tower
-            state.grid[tower.gy][tower.gx] = 0;
-            state.towers = state.towers.filter(t => t !== tower);
-            recalc_path();
-            update_ui();
+            // Remove Tower (Robust)
+            try {
+                // Force grid clear
+                state.grid[tower.gy][tower.gx] = 0;
+
+                // Remove by filtering
+                state.towers = state.towers.filter(t => t !== tower);
+
+                // Double check by coordinates just in case
+                const ghost = state.towers.find(t => t.gx === tower.gx && t.gy === tower.gy && t.type === 'dice');
+                if (ghost) {
+                    state.towers = state.towers.filter(t => t !== ghost);
+                }
+
+                recalc_path();
+                update_ui();
+
+                // Close menu if open on this tower
+                if (state.selection === tower) {
+                    close_menu();
+                }
+            } catch (e) {
+                console.error("Error removing dice:", e);
+            }
 
             // Unpause if wasn't paused
             if (!was_paused) state.paused = false;
 
             // Destroy Modal
-            document.body.removeChild(modal);
-            if (state.selection === tower) close_menu();
+            if (modal && modal.parentNode) {
+                document.body.removeChild(modal);
+            }
 
         }, 2000);
 
