@@ -801,7 +801,17 @@ function handle_input(e) {
     const p = get_grid_pos(e);
     if (p.x < 0 || p.x >= COLS || p.y < 0 || p.y >= ROWS) return;
     const t = state.towers.find(t => t.gx === p.x && t.gy === p.y);
-    if (t) open_menu(t, e); else { close_menu(); build_tower(p.x, p.y); }
+    if (t) {
+        // Special case for Promoted: Build ON TOP of tower
+        if (state.build_type === 'promoted' && t.type !== 'wall' && t.type !== 'mine' && t.type !== 'promoted') {
+            build_tower(p.x, p.y);
+        } else {
+            open_menu(t, e);
+        }
+    } else {
+        close_menu();
+        build_tower(p.x, p.y);
+    }
 }
 
 window.select_tower = function (type) {
