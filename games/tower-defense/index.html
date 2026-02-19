@@ -174,12 +174,53 @@
             </div>
         </div>
 
+        <!-- TOWER DICT MODAL -->
+        <div id="tower_dictionary"
+            class="hidden absolute inset-0 z-[60] bg-slate-950/95 backdrop-blur-md flex flex-col p-4 animate-fade-in">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
+                <h2
+                    class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">
+                    TOWER DB <span class="text-xs text-slate-500 font-mono ml-2">v1.0</span>
+                </h2>
+                <button onclick="toggle_dictionary()"
+                    class="text-slate-400 hover:text-white font-bold text-xl px-2">✕</button>
+            </div>
+
+            <div class="flex-grow flex gap-4 overflow-hidden">
+                <!-- LIST -->
+                <div id="dict_list"
+                    class="w-1/3 overflow-y-auto grid grid-cols-3 content-start gap-2 pr-2 custom-scrollbar">
+                    <!-- JS Generated Items -->
+                </div>
+
+                <!-- DETAILS -->
+                <div id="dict_details"
+                    class="w-2/3 bg-slate-900 border border-slate-800 rounded-xl p-6 flex flex-col items-center justify-center text-center shadow-inner">
+                    <p class="text-slate-500 italic">Selecione uma torre para ver os detalhes...</p>
+                </div>
+            </div>
+
+            <div class="mt-4 pt-2 border-t border-slate-800 text-center">
+                <p class="text-[10px] text-slate-500 font-mono uppercase tracking-widest">
+                    Desenvolvido por <span class="text-indigo-400 font-bold">Ton Alexandre</span> para o <span
+                        class="text-yellow-400 font-bold">Davizão</span>
+                </p>
+            </div>
+        </div>
+
         <!-- CANVAS GAME -->
         <canvas id="game_canvas" class="block max-w-full max-h-full mx-auto shadow-2xl"></canvas>
     </div>
 
     <!-- DIREITA: TORRES -->
     <div id="right_sidebar">
+        <!-- DICTIONARY BUTTON -->
+        <button onclick="toggle_dictionary()"
+            class="w-full bg-indigo-900/50 hover:bg-indigo-700 text-indigo-300 border border-indigo-500/30 rounded mb-2 py-1 flex justify-center items-center transition"
+            title="Tower Dictionary">
+            <span class="text-xl">📖</span>
+        </button>
+
         <div class="text-[9px] text-center text-slate-500 font-bold uppercase mb-1 border-b border-slate-800 pb-1">
             Arsenal</div>
 
