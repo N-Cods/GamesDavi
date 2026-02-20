@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { ArrowLeft, RefreshCw, Zap, Hammer, Bomb, Crosshair, Star, Heart, X as XIcon } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Zap, Hammer, Bomb, Crosshair, Star, Heart, Gem, Moon, Sun, X as XIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const WIDTH = 8;
@@ -7,9 +7,9 @@ const CANDY_TYPES = [
     { id: 0, color: 'text-red-500', bg: 'bg-red-500', icon: Heart },
     { id: 1, color: 'text-yellow-400', bg: 'bg-yellow-400', icon: Star },
     { id: 2, color: 'text-purple-500', bg: 'bg-purple-500', icon: Zap },
-    { id: 3, color: 'text-green-500', bg: 'bg-green-500', icon: ({ className }) => <div className={`w-full h-full rounded-full border-4 border-current ${className}`} /> },
-    { id: 4, color: 'text-blue-500', bg: 'bg-blue-500', icon: ({ className }) => <div className={`w-full h-full transform rotate-45 border-4 border-current ${className}`} /> },
-    { id: 5, color: 'text-orange-500', bg: 'bg-orange-500', icon: ({ className }) => <div className={`w-full h-full border-4 border-current rounded-md ${className}`} /> },
+    { id: 3, color: 'text-green-500', bg: 'bg-green-500', icon: Gem },
+    { id: 4, color: 'text-blue-500', bg: 'bg-blue-500', icon: Moon },
+    { id: 5, color: 'text-orange-500', bg: 'bg-orange-500', icon: Sun },
 ];
 
 const Match3 = () => {
