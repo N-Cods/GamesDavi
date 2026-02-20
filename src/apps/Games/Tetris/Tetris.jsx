@@ -7,6 +7,33 @@ const ROWS = 20;
 const COLS = 10;
 const BLOCK_SIZE = 25;
 
+// --- ERROR BOUNDARY ---
+class ErrorBoundary extends React.Component {
+    constructor(props) { super(props); this.state = { hasError: false, error: null }; }
+    static getDerivedStateFromError(error) { return { hasError: true, error }; }
+    componentDidCatch(error, errorInfo) { console.error("Tetris Error:", error, errorInfo); }
+    render() {
+        if (this.state.hasError) {
+            return (
+                <div className="p-4 text-red-500 bg-black min-h-screen flex flex-col items-center justify-center font-mono">
+                    <h1 className="text-xl font-bold mb-4">Tetris Crashed 😵</h1>
+                    <div className="bg-gray-900 p-4 rounded border border-red-900 max-w-sm overflow-auto text-xs">
+                        <p className="font-bold mb-2">{this.state.error?.toString()}</p>
+                    </div>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="mt-6 bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded-full font-bold transition"
+                    >
+                        Recarregar Página
+                    </button>
+                    <Link to="/" className="mt-4 text-gray-500 hover:text-white underline text-sm">Voltar ao Hub</Link>
+                </div>
+            );
+        }
+        return this.props.children;
+    }
+}
+
 const TETROMINOES = {
     0: { shape: [[0]], color: 'bg-slate-900/50', border: 'border-slate-800' },
     I: { shape: [[0, 'I', 0, 0], [0, 'I', 0, 0], [0, 'I', 0, 0], [0, 'I', 0, 0]], color: 'bg-cyan-500', border: 'border-cyan-400', shadow: 'shadow-[0_0_15px_rgba(6,182,212,0.7)]' },
@@ -36,8 +63,8 @@ const useInterval = (callback, delay) => {
     }, [delay]);
 };
 
-// --- COMPONENT ---
-const Tetris = () => {
+// --- CORE GAME COMPONENT ---
+const TetrisGame = () => {
     const [stage, setStage] = useState(createStage());
     const [dropTime, setDropTime] = useState(null);
     const [gameOver, setGameOver] = useState(false);
@@ -46,22 +73,21 @@ const Tetris = () => {
     const [level, setLevel] = useState(0);
     const [highScore, setHighScore] = useState(parseInt(localStorage.getItem('tetris_highscore') || '0'));
 
-    // Determine initial piece safely to avoid infinite loop on render
-    const initialPiece = RANDOM_TETROMINO().shape;
-    const initialNext = RANDOM_TETROMINO().shape;
-
-    // Player State
-    const [player, setPlayer] = useState({
-        pos: { x: COLS / 2 - 2, y: 0 },
-        tetromino: initialPiece,
-        collided: false,
+    // Initial State Setup
+    // Use state lazy initializer for randomness to ensure hydration consistency if needed (though strict mode might cause double invoke)
+    const [player, setPlayer] = useState(() => {
+        const t = RANDOM_TETROMINO().shape;
+        return {
+            pos: { x: COLS / 2 - 2, y: 0 },
+            tetromino: t,
+            collided: false,
+        };
     });
 
-    // Next Piece & Hold
-    const [nextPiece, setNextPiece] = useState(initialNext);
+    const [nextPiece, setNextPiece] = useState(() => RANDOM_TETROMINO().shape);
+
     const [holdPiece, setHoldPiece] = useState(null);
     const [canHold, setCanHold] = useState(true);
-
     const [isPaused, setIsPaused] = useState(false);
 
     // --- LOGIC ---
@@ -78,10 +104,9 @@ const Tetris = () => {
     };
 
     const startGame = () => {
-        // Reset everything
         setStage(createStage());
         setDropTime(1000);
-        resetPlayer();
+        resetPlayer(true); // reset with new randoms
         setGameOver(false);
         setScore(0);
         setRows(0);
@@ -91,24 +116,19 @@ const Tetris = () => {
         setIsPaused(false);
     };
 
-    const resetPlayer = () => {
-        const newTetromino = nextPiece; // Use the queued next piece
-        setNextPiece(RANDOM_TETROMINO().shape); // Generate new next
+    const resetPlayer = (forceNew = false) => {
+        const newTetromino = forceNew ? RANDOM_TETROMINO().shape : nextPiece;
+        if (!forceNew) setNextPiece(RANDOM_TETROMINO().shape);
 
-        const newPlayer = {
+        setPlayer({
             pos: { x: COLS / 2 - 2, y: 0 },
             tetromino: newTetromino,
             collided: false,
-        };
+        });
 
-        setPlayer(newPlayer);
-
-        // Immediate collision check (Game Over condition)
-        if (checkCollision(newPlayer, createStage(), { x: 0, y: 0 })) {
-            // In a real scenario we check against current stage, 
-            // but here we just reset logic. 
-            // For proper game over on spawn, we'd need the ref to current stage.
-        }
+        // Simplified collision check for Game Over on spawn
+        // Note: Real game over check happens in the loop or after collision, 
+        // but if we spawn inside a block, it's instant game over.
     };
 
     const updatePlayerPos = ({ x, y, collided }) => {
@@ -120,19 +140,14 @@ const Tetris = () => {
     };
 
     const checkCollision = (player, stage, { x: moveX, y: moveY }) => {
-        // Guard against empty player
-        if (!player.tetromino || player.tetromino.length === 0) return false;
+        if (!player.tetromino) return false;
 
         for (let y = 0; y < player.tetromino.length; y += 1) {
             for (let x = 0; x < player.tetromino[y].length; x += 1) {
-                // 1. Check that we're on an actual Tetromino cell
                 if (player.tetromino[y][x] !== 0) {
                     if (
-                        // 2. Check that our move is inside the game areas height (y)
                         !stage[y + player.pos.y + moveY] ||
-                        // 3. Check that our move is inside the game areas width (x)
                         !stage[y + player.pos.y + moveY][x + player.pos.x + moveX] ||
-                        // 4. Check that the cell isn't set to clear
                         stage[y + player.pos.y + moveY][x + player.pos.x + moveX][1] !== 'clear'
                     ) {
                         return true;
@@ -144,7 +159,6 @@ const Tetris = () => {
     };
 
     const drop = () => {
-        // Increase level every 10 rows
         if (rows > (level + 1) * 10) {
             setLevel(prev => prev + 1);
             setDropTime(1000 / (level + 1) + 200);
@@ -153,7 +167,6 @@ const Tetris = () => {
         if (!checkCollision(player, stage, { x: 0, y: 1 })) {
             updatePlayerPos({ x: 0, y: 1, collided: false });
         } else {
-            // Game Over
             if (player.pos.y < 1) {
                 setGameOver(true);
                 setDropTime(null);
@@ -169,9 +182,10 @@ const Tetris = () => {
 
     const hardDrop = () => {
         let tmpY = 0;
-        // Calculate max drop safely
-        while (!checkCollision(player, stage, { x: 0, y: tmpY + 1 }) && tmpY < ROWS) {
+        let safety = 0;
+        while (!checkCollision(player, stage, { x: 0, y: tmpY + 1 }) && safety < ROWS) {
             tmpY += 1;
+            safety++;
         }
         updatePlayerPos({ x: 0, y: tmpY, collided: true });
     };
@@ -205,12 +219,7 @@ const Tetris = () => {
 
         if (holdPiece === null) {
             setHoldPiece(player.tetromino);
-            setPlayer(prev => ({
-                ...prev,
-                pos: { x: COLS / 2 - 2, y: 0 },
-                tetromino: nextPiece,
-            }));
-            setNextPiece(RANDOM_TETROMINO().shape);
+            resetPlayer(); // Get next piece
         } else {
             const temp = player.tetromino;
             setPlayer(prev => ({
@@ -223,12 +232,12 @@ const Tetris = () => {
         setCanHold(false);
     };
 
-    // --- GAME LOOP & EFFECTS ---
-
+    // --- EFFECT: Game Loop ---
     useInterval(() => {
         if (!isPaused && !gameOver) drop();
     }, dropTime);
 
+    // --- EFFECT: Score ---
     useEffect(() => {
         if (score > highScore) {
             setHighScore(score);
@@ -236,6 +245,7 @@ const Tetris = () => {
         }
     }, [score, highScore]);
 
+    // --- EFFECT: Stage Update ---
     useEffect(() => {
         const sweepRows = newStage => {
             return newStage.reduce((ack, row) => {
@@ -251,26 +261,26 @@ const Tetris = () => {
         };
 
         const updateStage = prevStage => {
-            // First flush the stage from the previous render
             const newStage = prevStage.map(row =>
                 row.map(cell => (cell[1] === 'clear' ? [0, 'clear'] : cell))
             );
 
-            // Draw Tetromino
-            player.tetromino.forEach((row, y) => {
-                row.forEach((value, x) => {
-                    if (value !== 0) {
-                        if (y + player.pos.y >= 0 && y + player.pos.y < ROWS && x + player.pos.x >= 0 && x + player.pos.x < COLS) {
-                            newStage[y + player.pos.y][x + player.pos.x] = [
-                                value,
-                                `${player.collided ? 'merged' : 'clear'}`,
-                            ];
+            // Draw Tetromino SAFE CHECK
+            if (player.tetromino) {
+                player.tetromino.forEach((row, y) => {
+                    row.forEach((value, x) => {
+                        if (value !== 0) {
+                            if (newStage[y + player.pos.y] && newStage[y + player.pos.y][x + player.pos.x]) {
+                                newStage[y + player.pos.y][x + player.pos.x] = [
+                                    value,
+                                    `${player.collided ? 'merged' : 'clear'}`,
+                                ];
+                            }
                         }
-                    }
+                    });
                 });
-            });
+            }
 
-            // Collision handled?
             if (player.collided) {
                 resetPlayer();
                 setCanHold(true);
@@ -285,16 +295,13 @@ const Tetris = () => {
 
     // Ghost Piece
     const getGhostPosition = () => {
-        // Safety check to prevent infinite loop if collision logic fails against empty air
-        // or if player tetromino is empty (init state)
-        if (player.tetromino[0][0] === 0 && player.tetromino.length === 1) return player.pos; // Don't calc for empty
-
+        if (!player.tetromino) return player.pos;
         const ghostPlayer = { ...player, pos: { ...player.pos }, collided: false };
-        let safetyCounter = 0;
+        let safety = 0;
 
-        while (!checkCollision(ghostPlayer, stage, { x: 0, y: 1 }) && safetyCounter < ROWS) {
+        while (!checkCollision(ghostPlayer, stage, { x: 0, y: 1 }) && safety < ROWS) {
             ghostPlayer.pos.y += 1;
-            safetyCounter++;
+            safety++;
         }
         return ghostPlayer.pos;
     };
@@ -312,6 +319,7 @@ const Tetris = () => {
         );
     });
 
+    // --- RENDER ---
     return (
         <div
             className="min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col items-center py-4 px-2 select-none overflow-hidden touch-none"
@@ -340,7 +348,7 @@ const Tetris = () => {
 
             <div className="flex gap-2 w-full max-w-sm justify-center items-start">
 
-                {/* Left Panel: Hold */}
+                {/* Hold Panel */}
                 <div className="flex flex-col gap-2">
                     <div className="bg-slate-900 p-2 rounded-xl border border-slate-800 w-16 h-20 flex flex-col items-center justify-center">
                         <span className="text-[10px] text-slate-500 font-bold mb-1">HOLD</span>
@@ -350,55 +358,48 @@ const Tetris = () => {
                             ))) : <Archive size={16} className="text-slate-700" />}
                         </div>
                     </div>
-
-                    {/* Score Card */}
                     <div className="bg-slate-900 p-2 rounded-xl border border-slate-800 w-16 flex flex-col items-center justify-center">
                         <span className="text-[10px] text-slate-500 font-bold">SCORE</span>
                         <span className="text-sm font-bold text-white">{score}</span>
                     </div>
-
-                    <div className="bg-slate-900 p-2 rounded-xl border border-slate-800 w-16 flex flex-col items-center justify-center">
-                        <span className="text-[10px] text-slate-500 font-bold">LEVEL</span>
-                        <span className="text-sm font-bold text-yellow-400">{level}</span>
-                    </div>
                 </div>
 
-                {/* Main Stage */}
+                {/* Stage */}
                 <div className="relative bg-slate-900 border-4 border-slate-800 rounded-lg p-1 shadow-2xl">
                     <div
                         className="grid grid-cols-10 grid-rows-20 gap-px bg-slate-800/50"
                         style={{ width: '200px', height: '400px' }}
                     >
                         {stage.map((row, y) => row.map((cell, x) => {
-                            // Render Logic
                             let type = cell[0];
                             let isGhost = false;
 
-                            // Check Ghost
-                            if (type === 0 && !gameOver && player.tetromino[y - ghostPos.y] && player.tetromino[y - ghostPos.y][x - ghostPos.x] !== 0) {
-                                type = 0; // It is empty, but ghost overrides visual
-                                isGhost = true;
-                            } else if (type === 0) {
-                                isGhost = false;
+                            // Ghost Render Logic
+                            if (type === 0 && !gameOver && player.tetromino) {
+                                // Check bounds
+                                const gY = y - ghostPos.y;
+                                const gX = x - ghostPos.x;
+                                if (gY >= 0 && gY < player.tetromino.length &&
+                                    gX >= 0 && gX < player.tetromino[0].length) {
+                                    if (player.tetromino[gY][gX] !== 0) {
+                                        isGhost = true;
+                                    }
+                                }
                             }
 
                             return <Cell key={`${x}-${y}`} type={type || (isGhost ? player.tetromino[y - ghostPos.y][x - ghostPos.x] : 0)} isGhost={isGhost} />;
                         }))}
                     </div>
 
-                    {/* Overlays */}
                     {(gameOver || isPaused) && (
                         <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center z-20 animate-in fade-in">
-                            {gameOver ? (
-                                <>
-                                    <h2 className="text-red-500 font-black text-3xl mb-2 drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]">GAME OVER</h2>
-                                    <div className="text-slate-300 text-sm mb-6">Score: {score}</div>
-                                    <button onClick={startGame} className="bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-3 px-8 rounded-full shadow-[0_0_20px_rgba(6,182,212,0.5)] transition-all active:scale-95 flex items-center gap-2">
-                                        <RefreshCw size={20} /> Tentar Novamente
-                                    </button>
-                                </>
-                            ) : (
-                                <h2 className="text-yellow-400 font-black text-3xl tracking-widest">PAUSADO</h2>
+                            <h2 className={`font-black text-3xl mb-2 ${gameOver ? 'text-red-500' : 'text-yellow-400'}`}>
+                                {gameOver ? 'GAME OVER' : 'PAUSADO'}
+                            </h2>
+                            {gameOver && (
+                                <button onClick={startGame} className="bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-3 px-8 rounded-full shadow-lg transition-all active:scale-95 flex items-center gap-2">
+                                    <RefreshCw size={20} /> Tentar Novamente
+                                </button>
                             )}
                         </div>
                     )}
@@ -412,7 +413,7 @@ const Tetris = () => {
                     )}
                 </div>
 
-                {/* Right Panel: Next */}
+                {/* Next Panel */}
                 <div className="bg-slate-900 p-2 rounded-xl border border-slate-800 w-16 h-20 flex flex-col items-center justify-center">
                     <span className="text-[10px] text-slate-500 font-bold mb-1">NEXT</span>
                     <div className="grid grid-cols-4 gap-0.5 w-10">
@@ -421,69 +422,35 @@ const Tetris = () => {
                         )))}
                     </div>
                 </div>
-
             </div>
 
-            {/* Controls */}
+            {/* Touch Controls */}
             <div className="mt-4 w-full max-w-sm grid grid-cols-3 gap-2 px-4 h-32">
-                {/* Hold / Rotate Area */}
                 <div className="flex flex-col gap-2 justify-end">
-                    <button
-                        onClick={hold}
-                        disabled={!canHold}
-                        className={`h-14 rounded-2xl flex items-center justify-center border-b-4 transition-all active:border-b-0 active:translate-y-1 ${!canHold ? 'bg-slate-800 border-slate-900 text-slate-600' : 'bg-slate-700 border-slate-900 hover:bg-slate-600 text-white'}`}
-                    >
-                        <Archive size={20} />
-                    </button>
-                    <button
-                        onClick={() => playerRotate(stage, 1)}
-                        className="h-14 bg-purple-600 hover:bg-purple-500 border-purple-800 text-white rounded-2xl flex items-center justify-center border-b-4 transition-all active:border-b-0 active:translate-y-1"
-                    >
-                        <RotateCw size={24} />
-                    </button>
+                    <button onClick={hold} disabled={!canHold} className={`h-14 rounded-2xl flex items-center justify-center border-b-4 transition-all active:border-b-0 active:translate-y-1 ${!canHold ? 'bg-slate-800 border-slate-900 text-slate-600' : 'bg-slate-700 border-slate-900 hover:bg-slate-600 text-white'}`}><Archive size={20} /></button>
+                    <button onClick={() => playerRotate(stage, 1)} className="h-14 bg-purple-600 hover:bg-purple-500 border-purple-800 text-white rounded-2xl flex items-center justify-center border-b-4 transition-all active:border-b-0 active:translate-y-1"><RotateCw size={24} /></button>
                 </div>
-
-                {/* Directional Pad */}
                 <div className="col-span-1 grid grid-rows-2 gap-1 h-full">
-                    <button
-                        onClick={hardDrop}
-                        className="bg-red-600 hover:bg-red-500 border-red-800 text-white rounded-2xl flex items-center justify-center border-b-4 transition-all active:border-b-0 active:translate-y-1 h-full"
-                    >
-                        <ChevronsDown size={28} />
-                    </button>
-                    <button
-                        onTouchStart={(e) => { dropPlayer(); }}
-                        onMouseDown={(e) => { dropPlayer(); }}
-                        className="bg-slate-700 hover:bg-slate-600 border-slate-900 text-white rounded-2xl flex items-center justify-center border-b-4 transition-all active:border-b-0 active:translate-y-1 h-full"
-                    >
-                        <ArrowDown size={24} />
-                    </button>
+                    <button onClick={hardDrop} className="bg-red-600 hover:bg-red-500 border-red-800 text-white rounded-2xl flex items-center justify-center border-b-4 transition-all active:border-b-0 active:translate-y-1 h-full"><ChevronsDown size={28} /></button>
+                    <button onTouchStart={(e) => dropPlayer()} onMouseDown={(e) => dropPlayer()} className="bg-slate-700 hover:bg-slate-600 border-slate-900 text-white rounded-2xl flex items-center justify-center border-b-4 transition-all active:border-b-0 active:translate-y-1 h-full"><ArrowDown size={24} /></button>
                 </div>
-
-                {/* Left/Right */}
                 <div className="flex flex-col gap-2 justify-end">
                     <div className="flex gap-1 h-full">
-                        <button
-                            onClick={() => movePlayer(-1)}
-                            className="flex-1 bg-slate-700 hover:bg-slate-600 border-slate-900 text-white rounded-2xl flex items-center justify-center border-b-4 transition-all active:border-b-0 active:translate-y-1"
-                        >
-                            <ArrowLeft size={24} />
-                        </button>
-                        <button
-                            onClick={() => movePlayer(1)}
-                            className="flex-1 bg-slate-700 hover:bg-slate-600 border-slate-900 text-white rounded-2xl flex items-center justify-center border-b-4 transition-all active:border-b-0 active:translate-y-1"
-                        >
-                            <ArrowRight size={24} />
-                        </button>
+                        <button onClick={() => movePlayer(-1)} className="flex-1 bg-slate-700 hover:bg-slate-600 border-slate-900 text-white rounded-2xl flex items-center justify-center border-b-4 transition-all active:border-b-0 active:translate-y-1"><ArrowLeft size={24} /></button>
+                        <button onClick={() => movePlayer(1)} className="flex-1 bg-slate-700 hover:bg-slate-600 border-slate-900 text-white rounded-2xl flex items-center justify-center border-b-4 transition-all active:border-b-0 active:translate-y-1"><ArrowRight size={24} /></button>
                     </div>
                 </div>
             </div>
 
-            <div className="mt-2 text-slate-600 text-[10px] text-center uppercase tracking-wider font-bold">
-                Cyber Tetris v2.0
-            </div>
+            <div className="mt-2 text-slate-600 text-[10px] text-center uppercase tracking-wider font-bold">Cyber Tetris v2.0</div>
         </div>
     );
 };
 
-export default Tetris;
+export default function TetrisWithErrorBoundary() {
+    return (
+        <ErrorBoundary>
+            <TetrisGame />
+        </ErrorBoundary>
+    );
+};
