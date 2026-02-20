@@ -5,25 +5,32 @@ import {
     Gamepad2, Grid3X3, Beaker, Candy, X, Grid, Castle
 } from 'lucide-react';
 
-const AppCard = ({ to, href, icon: Icon, title, desc, color }) => {
+const AppCard = ({ to, href, icon: Icon, title, desc, color, video }) => {
     const content = (
-        <div className="p-6 flex flex-col items-start gap-4 h-full">
+        <div className="p-6 flex flex-col items-start gap-4 h-full relative z-10">
             <div className={`p-3 rounded-xl ${color} bg-opacity-10 text-white shadow-inner group-hover:scale-110 transition-transform`}>
                 <Icon size={24} className="stroke-[1.5]" />
             </div>
             <div>
-                <h3 className="font-bold text-lg text-slate-100 mb-1 group-hover:text-cyan-400 transition-colors">{title}</h3>
-                <p className="text-xs text-slate-400 font-medium leading-relaxed">{desc}</p>
+                <h3 className="font-bold text-lg text-slate-100 mb-1 group-hover:text-cyan-400 transition-colors drop-shadow-md">{title}</h3>
+                <p className="text-xs text-slate-400 font-medium leading-relaxed drop-shadow-sm">{desc}</p>
             </div>
         </div>
     );
 
+    const videoBg = video ? (
+        <div className="absolute inset-0 z-0 opacity-0 group-hover:opacity-40 transition-opacity duration-500 overflow-hidden">
+            <video src={video} autoPlay loop muted playsInline className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/50 to-transparent"></div>
+        </div>
+    ) : null;
+
     const classes = "group relative overflow-hidden bg-slate-900 border border-slate-800 rounded-2xl hover:border-slate-700 transition-all hover:shadow-xl hover:shadow-cyan-900/10 hover:-translate-y-1 block h-full";
 
     if (href) {
-        return <a href={href} className={classes}>{content}</a>;
+        return <a href={href} className={classes}>{videoBg}{content}</a>;
     }
-    return <Link to={to} className={classes}>{content}</Link>;
+    return <Link to={to} className={classes}>{videoBg}{content}</Link>;
 };
 
 export default function Hub() {
@@ -52,7 +59,7 @@ export default function Hub() {
                 <section>
                     <h2 className="text-sm font-mono uppercase tracking-widest text-slate-500 mb-6 pl-2 border-l-2 border-purple-500">Arcade Games</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <AppCard href="games/tower-defense/index.html" icon={Castle} title="Tower Defense" desc="Defenda sua base!" color="bg-orange-600" />
+                        <AppCard href="games/tower-defense/index.html" icon={Castle} title="Tower Defense" desc="Defenda sua base!" color="bg-orange-600" video="games/tower-defense/img/animate.mp4" />
                         <AppCard to="/tictactoe" icon={X} title="Tic Tac Toe" desc="O clássico Jogo da Velha." color="bg-red-500" />
                         <AppCard to="/water" icon={Beaker} title="Water Sort" desc="Puzzle de organização de cores." color="bg-blue-500" />
                         <AppCard to="/match3" icon={Candy} title="Match 3" desc="Combine doces para pontuar." color="bg-yellow-500" />
