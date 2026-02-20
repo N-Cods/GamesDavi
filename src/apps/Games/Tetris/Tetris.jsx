@@ -365,10 +365,10 @@ const TetrisGame = () => {
                 </div>
 
                 {/* Stage */}
-                <div className="relative bg-slate-900 border-4 border-slate-800 rounded-lg p-1 shadow-2xl">
+                <div className="relative bg-slate-900 border-4 border-slate-800 rounded-lg p-1 shadow-2xl overflow-hidden">
                     <div
-                        className="grid grid-cols-10 grid-rows-20 gap-px bg-slate-800/50"
-                        style={{ width: '200px', height: '400px' }}
+                        className="grid grid-cols-10 grid-rows-20 gap-px bg-slate-800/50 w-full h-auto aspect-[1/2]"
+                        style={{ minWidth: '200px', maxWidth: '100%' }}
                     >
                         {stage.map((row, y) => row.map((cell, x) => {
                             let type = cell[0];
