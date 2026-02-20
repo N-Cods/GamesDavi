@@ -332,21 +332,21 @@ const TetrisGame = () => {
             tabIndex="0"
         >
             {/* Header */}
-            <div className="flex justify-between w-full max-w-sm items-center mb-2">
-                <Link to="/" className="p-2 bg-slate-800 rounded-full text-slate-400 hover:text-white"><ArrowLeft size={20} /></Link>
+            <div className="flex justify-between w-full max-w-xl items-center mb-4">
+                <Link to="/" className="p-3 bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors"><ArrowLeft size={24} /></Link>
                 <div className="flex flex-col items-center">
-                    <span className="text-[10px] text-slate-500 font-bold tracking-widest uppercase">High Score</span>
-                    <span className="text-xl font-black text-cyan-400">{highScore}</span>
+                    <span className="text-xs text-slate-500 font-bold tracking-widest uppercase">High Score</span>
+                    <span className="text-2xl font-black text-cyan-400 drop-shadow-md">{highScore}</span>
                 </div>
                 <button
                     onClick={() => setIsPaused(!isPaused)}
-                    className={`p-2 rounded-full ${isPaused ? 'bg-yellow-500 text-black' : 'bg-slate-800 text-slate-400'} hover:text-white`}
+                    className={`p-3 rounded-full transition-colors ${isPaused ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20' : 'bg-slate-800 text-slate-400 hover:text-white'}`}
                 >
-                    {isPaused ? <Play size={20} /> : <Pause size={20} />}
+                    {isPaused ? <Play size={24} /> : <Pause size={24} />}
                 </button>
             </div>
 
-            <div className="flex gap-2 w-full max-w-sm justify-center items-start">
+            <div className="flex gap-4 w-full max-w-xl justify-center items-start flex-1 min-h-0">
 
                 {/* Hold Panel */}
                 <div className="flex flex-col gap-2">
@@ -425,19 +425,50 @@ const TetrisGame = () => {
             </div>
 
             {/* Touch Controls */}
-            <div className="mt-4 w-full max-w-sm grid grid-cols-3 gap-2 px-4 h-32">
-                <div className="flex flex-col gap-2 justify-end">
-                    <button onClick={hold} disabled={!canHold} className={`h-14 rounded-2xl flex items-center justify-center border-b-4 transition-all active:border-b-0 active:translate-y-1 ${!canHold ? 'bg-slate-800 border-slate-900 text-slate-600' : 'bg-slate-700 border-slate-900 hover:bg-slate-600 text-white'}`}><Archive size={20} /></button>
-                    <button onClick={() => playerRotate(stage, 1)} className="h-14 bg-purple-600 hover:bg-purple-500 border-purple-800 text-white rounded-2xl flex items-center justify-center border-b-4 transition-all active:border-b-0 active:translate-y-1"><RotateCw size={24} /></button>
+            <div className="mt-6 w-full max-w-xl grid grid-cols-3 gap-3 px-2 h-40 pb-4">
+                <div className="flex flex-col gap-3 justify-end pointer-events-auto">
+                    <button
+                        onClick={hold}
+                        disabled={!canHold}
+                        className={`h-16 rounded-2xl flex items-center justify-center border-b-[6px] transition-all active:border-b-0 active:translate-y-1.5 touch-manipulation ${!canHold ? 'bg-slate-800 border-slate-900 text-slate-600' : 'bg-slate-700 border-slate-900 hover:bg-slate-600 text-white'}`}
+                    >
+                        <Archive size={28} />
+                    </button>
+                    <button
+                        onClick={() => playerRotate(stage, 1)}
+                        className="h-20 bg-purple-600 hover:bg-purple-500 border-purple-800 text-white rounded-2xl flex items-center justify-center border-b-[6px] transition-all active:border-b-0 active:translate-y-1.5 touch-manipulation"
+                    >
+                        <RotateCw size={32} />
+                    </button>
                 </div>
-                <div className="col-span-1 grid grid-rows-2 gap-1 h-full">
-                    <button onClick={hardDrop} className="bg-red-600 hover:bg-red-500 border-red-800 text-white rounded-2xl flex items-center justify-center border-b-4 transition-all active:border-b-0 active:translate-y-1 h-full"><ChevronsDown size={28} /></button>
-                    <button onTouchStart={(e) => dropPlayer()} onMouseDown={(e) => dropPlayer()} className="bg-slate-700 hover:bg-slate-600 border-slate-900 text-white rounded-2xl flex items-center justify-center border-b-4 transition-all active:border-b-0 active:translate-y-1 h-full"><ArrowDown size={24} /></button>
+                <div className="col-span-1 grid grid-rows-2 gap-3 h-full pointer-events-auto">
+                    <button
+                        onClick={hardDrop}
+                        className="bg-red-600 hover:bg-red-500 border-red-800 text-white rounded-2xl flex items-center justify-center border-b-[6px] transition-all active:border-b-0 active:translate-y-1.5 touch-manipulation h-full"
+                    >
+                        <ChevronsDown size={36} />
+                    </button>
+                    <button
+                        onPointerDown={(e) => { e.preventDefault(); dropPlayer(); }}
+                        className="bg-slate-700 hover:bg-slate-600 border-slate-900 text-white rounded-2xl flex items-center justify-center border-b-[6px] transition-all active:border-b-0 active:translate-y-1.5 touch-manipulation h-full"
+                    >
+                        <ArrowDown size={32} />
+                    </button>
                 </div>
-                <div className="flex flex-col gap-2 justify-end">
-                    <div className="flex gap-1 h-full">
-                        <button onClick={() => movePlayer(-1)} className="flex-1 bg-slate-700 hover:bg-slate-600 border-slate-900 text-white rounded-2xl flex items-center justify-center border-b-4 transition-all active:border-b-0 active:translate-y-1"><ArrowLeft size={24} /></button>
-                        <button onClick={() => movePlayer(1)} className="flex-1 bg-slate-700 hover:bg-slate-600 border-slate-900 text-white rounded-2xl flex items-center justify-center border-b-4 transition-all active:border-b-0 active:translate-y-1"><ArrowRight size={24} /></button>
+                <div className="flex flex-col gap-3 justify-end pointer-events-auto">
+                    <div className="flex gap-2 h-full">
+                        <button
+                            onPointerDown={(e) => { e.preventDefault(); movePlayer(-1); }}
+                            className="flex-1 bg-slate-700 hover:bg-slate-600 border-slate-900 text-white rounded-2xl flex items-center justify-center border-b-[6px] transition-all active:border-b-0 active:translate-y-1.5 touch-manipulation"
+                        >
+                            <ArrowLeft size={32} />
+                        </button>
+                        <button
+                            onPointerDown={(e) => { e.preventDefault(); movePlayer(1); }}
+                            className="flex-1 bg-slate-700 hover:bg-slate-600 border-slate-900 text-white rounded-2xl flex items-center justify-center border-b-[6px] transition-all active:border-b-0 active:translate-y-1.5 touch-manipulation"
+                        >
+                            <ArrowRight size={32} />
+                        </button>
                     </div>
                 </div>
             </div>
